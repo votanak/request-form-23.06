@@ -1,10 +1,16 @@
 import { useState } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ru } from 'date-fns/locale';
+registerLocale('ru', ru);
 
 function App() {
   const [formData, setFormData] = useState({
-    links: '',
+    marketplace: '',
     client_id: '',
     client_key: '',
+    startDate: new Date(),
+    endDate: new Date(),
   });
 
   const sendForm = (e) => {
@@ -30,16 +36,25 @@ function App() {
     };
     request('/req', 'POST', {
       body: JSON.stringify({
-        links: formData.links.split('\n'),
+        marketplace: formData.marketplace,
         client_id: formData.client_id,
         client_key: formData.client_key,
+        startDate: '',
+        endDate: '',
       }),
     }).then((data) => alert(data));
     setFormData({
-      links: '',
+      marketplace: '',
       client_id: '',
       client_key: '',
+      startDate: '',
+      endDate: '',
     });
+  };
+
+  const dateChange = (date, e) => {
+    console.log(e.target.name);
+    setFormData({ ...formData, [e.target.name]: date });
   };
 
   return (
@@ -55,24 +70,19 @@ function App() {
           <form className="space-y-6" onSubmit={sendForm}>
             <div>
               <label
-                htmlFor="links"
-                className="block text-sm font-medium leading-6 text-gray-900">
-                Cсылки
+                htmlFor="marketplace"
+                className="block text-sm font-medium leading-6 text-gray-900 mx-auto sm:max-w-sm">
+                Площадка
               </label>
-              <div class="mt-2">
-                <textarea
-                  id="links"
-                  name="email"
-                  type="text"
-                  placeholder="Ссылки"
-                  rows="10"
-                  required
-                  value={formData.links}
-                  className="block p-2 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  onChange={(e) => {
-                    setFormData({ ...formData, links: e.target.value });
-                  }}
-                />
+              <div className="mt-2 ">
+                <select
+                  name="marketplace"
+                  id="marketplace"
+                  className="bg-gray-50 mx-auto sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                  <option value="">-- Выберите площадку --</option>
+                  <option value="petersburg">OZON</option>
+                  <option value="samara">Wildberries</option>
+                </select>
               </div>
             </div>
 
@@ -84,7 +94,7 @@ function App() {
                   CLIENT_ID
                 </label>
               </div>
-              <div class="mt-2">
+              <div className="mt-2">
                 <input
                   id="client-id"
                   name="client-id"
@@ -108,7 +118,7 @@ function App() {
                   CLIENT_KEY
                 </label>
               </div>
-              <div class="mt-2">
+              <div className="mt-2">
                 <input
                   id="client-key"
                   name="client-key"
@@ -123,7 +133,32 @@ function App() {
                 />
               </div>
             </div>
-
+            <div className="flex justify-center">
+              <div className="flex flex-col">
+                <label htmlFor="start-date">Начальная дата</label>
+                <DatePicker
+                  id="start-date"
+                  name="startDate"
+                  locale="ru"
+                  selected={formData.startDate}
+                  dateFormat="dd/MM/yyyy"
+                  onChange={(date, e) => dateChange(date, e)}
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="start-date">Конечная дата</label>
+                <DatePicker
+                  id="end-date"
+                  name="endDate"
+                  locale="ru"
+                  dateFormat="dd/MM/yyyy"
+                  selected={formData.endDate}
+                  onChange={(date) => {
+                    setFormData({ ...formData, endDate: date });
+                  }}
+                />
+              </div>
+            </div>
             <div className="flex justify-center">
               <button
                 type="submit"
