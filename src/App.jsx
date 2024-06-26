@@ -3,6 +3,26 @@ import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ru } from 'date-fns/locale';
 registerLocale('ru', ru);
+import styled from 'styled-components';
+
+const AppStyle = styled.div`
+  .react-datepicker__close-icon {
+    margin-right: -30px;
+  }
+  .react-datepicker__input-container {
+    & input {
+      border-radius: 5px;
+      border: gray 1px solid;
+      padding: 5px;
+    }
+    &input: focus {
+      border: gray 1px solid;
+    }
+  }
+  .react-datepicker__close-icon::after {
+    padding-top: 0;
+  }
+`;
 
 function App() {
   const [formData, setFormData] = useState({
@@ -39,26 +59,23 @@ function App() {
         marketplace: formData.marketplace,
         client_id: formData.client_id,
         client_key: formData.client_key,
-        startDate: '',
-        endDate: '',
+        startDate: formData.startDate,
+        endDate: formData.startDate,
       }),
     }).then((data) => alert(data));
     setFormData({
       marketplace: '',
       client_id: '',
       client_key: '',
-      startDate: '',
-      endDate: '',
+      startDate: new Date(),
+      endDate: new Date(),
     });
   };
 
-  const dateChange = (date, e) => {
-    console.log(e.target.name);
-    setFormData({ ...formData, [e.target.name]: date });
-  };
+  console.log(formData);
 
   return (
-    <div className="">
+    <AppStyle>
       <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -78,10 +95,15 @@ function App() {
                 <select
                   name="marketplace"
                   id="marketplace"
-                  className="bg-gray-50 mx-auto sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                  required
+                  className="bg-gray-50 mx-auto sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={formData.marketplace}
+                  onChange={(e) =>
+                    setFormData({ ...formData, marketplace: e.target.value })
+                  }>
                   <option value="">-- Выберите площадку --</option>
-                  <option value="petersburg">OZON</option>
-                  <option value="samara">Wildberries</option>
+                  <option value="OZON">OZON</option>
+                  <option value="WB">Wildberries</option>
                 </select>
               </div>
             </div>
@@ -134,28 +156,25 @@ function App() {
               </div>
             </div>
             <div className="flex justify-center">
-              <div className="flex flex-col">
-                <label htmlFor="start-date">Начальная дата</label>
+              <div className="flex justify-center flex-col">
+                <div className="text-center">Временной диапазон</div>
                 <DatePicker
-                  id="start-date"
-                  name="startDate"
+                  id="dates"
+                  name="dates"
                   locale="ru"
-                  selected={formData.startDate}
+                  required
+                  selectsRange={true}
+                  startDate={formData.startDate}
+                  endDate={formData.endDate}
+                  isClearable={true}
                   dateFormat="dd/MM/yyyy"
-                  onChange={(date, e) => dateChange(date, e)}
-                />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="start-date">Конечная дата</label>
-                <DatePicker
-                  id="end-date"
-                  name="endDate"
-                  locale="ru"
-                  dateFormat="dd/MM/yyyy"
-                  selected={formData.endDate}
-                  onChange={(date) => {
-                    setFormData({ ...formData, endDate: date });
-                  }}
+                  onChange={(update) =>
+                    setFormData({
+                      ...formData,
+                      startDate: update[0],
+                      endDate: update[1],
+                    })
+                  }
                 />
               </div>
             </div>
@@ -169,7 +188,7 @@ function App() {
           </form>
         </div>
       </div>
-    </div>
+    </AppStyle>
   );
 }
 
