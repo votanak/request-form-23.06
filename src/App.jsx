@@ -62,9 +62,9 @@ function App() {
     request('/req', 'POST', {
       body: JSON.stringify({
         marketplace: formData.marketplace,
+        market: formData.market,
         performanceKey: formData.performanceKey,
         performanceSecret: formData.performanceSecret,
-        market: formData.market,
         client_id: formData.client_id,
         client_key: formData.client_key,
         startDate: formData.startDate,
@@ -73,9 +73,9 @@ function App() {
     }).then((data) => alert(data));
     setFormData({
       marketplace: '',
+      market: '',
       performanceKey: '',
       performanceSecret: '',
-       market: '',
       client_id: '',
       client_key: '',
       startDate: new Date(),
@@ -84,10 +84,10 @@ function App() {
   };
 
 
-  const marketPlaceSelectionHandle = (e) => {
-      setFormData({ ...formData, marketplace: e.target.value })
-      setShowPerformance(e.target.value === 'OZON'? '': 'hidden')
+  const marketPlaceChangeHandle = (e) => {
+      setShowPerformance(e.target.value === 'ozon'? '': 'hidden')
       setFormData({
+        marketplace: e.target.value,
         performanceKey: '',
         performanceSecret: '',
         market: '',
@@ -124,10 +124,10 @@ function App() {
                   required
                   className="bg-gray-50 mx-auto sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={formData.marketplace}
-                  onChange={marketPlaceSelectionHandle}>
+                  onChange={marketPlaceChangeHandle}>
                   <option value="">-- Выберите площадку --</option>
-                  <option value="OZON">OZON</option>
-                  <option value="WB">Wildberries</option>
+                  <option value="ozon">OZON</option>
+                  <option value="wb">Wildberries</option>
                 </select>
               </div>
             </div>
@@ -169,7 +169,7 @@ function App() {
                   name="performance-key"
                   type="text"
                   placeholder="Performance Key"
-                  required={formData.marketplace === 'OZON'? true :false}
+                  required={formData.marketplace === 'ozon'? true : false}
                   className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   onChange={(e) => {
                     setFormData({ ...formData, performanceKey: e.target.value });
@@ -193,7 +193,7 @@ function App() {
                   name="performance-secret"
                   type="text"
                   placeholder="Performance Secret"
-                  required={formData.marketplace === 'OZON'? true :false}
+                  required={formData.marketplace === 'ozon'? true :false}
                   className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   onChange={(e) => {
                     setFormData({ ...formData, performanceSecret: e.target.value });
