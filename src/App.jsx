@@ -28,8 +28,8 @@ function App() {
   const [formData, setFormData] = useState({
     marketplace: '',
     market: '',
-    performanceKey: '',
-    performanceSecret: '',
+    performance_key: '',
+    performance_secret: '',
     client_id: '',
     client_key: '',
     startDate: new Date(),
@@ -40,7 +40,6 @@ function App() {
 
   const sendForm = (e) => {
     e.preventDefault();
-    console.log(formData);
     const request = async (url, method, params) => {
       try {
         const response = await fetch(
@@ -53,7 +52,7 @@ function App() {
             ...(method === 'POST' ? params : {}),
           },
         );
-        return response.json();
+        response.json(); 
       } catch (e) {
         console.log(e);
         return e;
@@ -63,8 +62,8 @@ function App() {
       body: JSON.stringify({
         marketplace: formData.marketplace,
         market: formData.market,
-        performanceKey: formData.performanceKey,
-        performanceSecret: formData.performanceSecret,
+        performance_key: formData.performance_key,
+        performance_secret: formData.performance_secret,
         client_id: formData.client_id,
         client_key: formData.client_key,
         startDate: formData.startDate,
@@ -74,8 +73,8 @@ function App() {
     setFormData({
       marketplace: '',
       market: '',
-      performanceKey: '',
-      performanceSecret: '',
+      performance_key: '',
+      performance_secret: '',
       client_id: '',
       client_key: '',
       startDate: new Date(),
@@ -85,11 +84,11 @@ function App() {
 
 
   const marketPlaceChangeHandle = (e) => {
-      setShowPerformance(e.target.value === 'ozon'? '': 'hidden')
+      setShowPerformance(e.target.value === 'OZON'? '': 'hidden')
       setFormData({
         marketplace: e.target.value,
-        performanceKey: '',
-        performanceSecret: '',
+        performance_key: '',
+        performance_secret: '',
         market: '',
         client_id: '',
         client_key: '',
@@ -124,8 +123,8 @@ function App() {
                   value={formData.marketplace}
                   onChange={marketPlaceChangeHandle}>
                   <option value="">-- Выберите площадку --</option>
-                  <option value="ozon">OZON</option>
-                  <option value="wb">Wildberries</option>
+                  <option value="OZON">OZON</option>
+                  <option value="WB">Wildberries</option>
                 </select>
               </div>
             </div>
@@ -170,9 +169,9 @@ function App() {
                   required={formData.marketplace === 'ozon'? true : false}
                   className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   onChange={(e) => {
-                    setFormData({ ...formData, performanceKey: e.target.value });
+                    setFormData({ ...formData, performance_key: e.target.value });
                   }}
-                  value={formData.performanceKey}
+                  value={formData.performance_key}
                 />
               </div>
             </div>
@@ -194,9 +193,9 @@ function App() {
                   required={formData.marketplace === 'ozon'? true :false}
                   className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   onChange={(e) => {
-                    setFormData({ ...formData, performanceSecret: e.target.value });
+                    setFormData({ ...formData, performance_secret: e.target.value });
                   }}
-                  value={formData.performanceSecret}
+                  value={formData.performance_secret}
                 />
               </div>
             </div>
