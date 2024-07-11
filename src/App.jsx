@@ -2,8 +2,11 @@ import { useState } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ru } from 'date-fns/locale';
+import * as XLSX from 'xlsx/xlsx.mjs';
 registerLocale('ru', ru);
 import styled from 'styled-components';
+import { postRequest, getRequest, request } from './request';
+import { useEffect } from 'react';
 
 const AppStyle = styled.div`
   .react-datepicker__close-icon {
@@ -24,116 +27,110 @@ const AppStyle = styled.div`
   }
 `;
 
+const markArr = ['Магаз 1', 'Магаз 2', 'Магаз 3', 'Магаз 4'];
+
 function App() {
   const [formData, setFormData] = useState({
-    marketplace: '',
-    market: '',
-    performance_key: '',
-    performance_secret: '',
-    client_id: '',
-    client_key: '',
+    name: '',
     startDate: new Date(),
     endDate: new Date(),
   });
+  const [markets, setMarkets] = useState([]);
+  const [marketsFile, setMarketsFile] = useState('');
 
-  const [showPerformance, setShowPerformance] = useState('hidden');
+  useEffect(() => {
+    getRequest('/markets', '').then((marketsData) => setMarkets(marketsData));
+  }, []);
+
+  const sendMarketsFile = (e) => {
+    e.preventDefault();
+    let fileReader = new FileReader();
+    fileReader.readAsArrayBuffer(marketsFile);
+    fileReader.onload = (e) => {
+      let workbook = XLSX.read(e.target.result, { type: 'binary' });
+      let mArr = XLSX.utils.sheet_to_json(workbook.Sheets['Магазины']);
+      console.log(mArr);
+      let marketsArray = [];
+      mArr.forEach((el) => {
+        marketsArray.push({
+          name: el['Название магазина'] || '',
+          marketplace: el['Площадка'] || '',
+          performance_key: el['performance key'] || '',
+          performance_secret: el['performance secret'] || '',
+          client_id: el['client id'],
+          client_key: el['client key'],
+          spreadsheet_url: el['Ссылка на Google-таблицу'] || '',
+        });
+      });
+      postRequest('/markets', { markets: marketsArray }).then((data) => {
+        console.log(data);
+        document.querySelector('#file-input').value = '';
+      });
+    };
+  };
 
   const sendForm = (e) => {
     e.preventDefault();
-    const request = async (url, method, params) => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_REACT_APP_SERVER_URL}${url}`,
-          {
-            method,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            ...(method === 'POST' ? params : {}),
-          },
-        );
-        response.json(); 
-      } catch (e) {
-        console.log(e);
-        return e;
-      }
-    };
-    request('/req', 'POST', {
+    postRequest('/markets', {
       body: JSON.stringify({
-        marketplace: formData.marketplace,
-        market: formData.market,
-        performance_key: formData.performance_key,
-        performance_secret: formData.performance_secret,
-        client_id: formData.client_id,
-        client_key: formData.client_key,
+        name: formData.name,
         startDate: formData.startDate,
         endDate: formData.startDate,
       }),
     }).then((data) => alert(data));
     setFormData({
-      marketplace: '',
-      market: '',
-      performance_key: '',
-      performance_secret: '',
-      client_id: '',
-      client_key: '',
+      name: '',
       startDate: new Date(),
       endDate: new Date(),
     });
   };
-
-
-  const marketPlaceChangeHandle = (e) => {
-      setShowPerformance(e.target.value === 'OZON'? '': 'hidden')
-      setFormData({
-        marketplace: e.target.value,
-        performance_key: '',
-        performance_secret: '',
-        market: '',
-        client_id: '',
-        client_key: '',
-        startDate: new Date(),
-        endDate: new Date(),
-      });
-  }
 
   return (
     <AppStyle>
       <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Форма отправки запроса
+            Загрузка файла с магазинами
           </h2>
         </div>
 
-        <div className="mt-10 sm:mx-auto sm:w-full ">
-          <form className="space-y-6" onSubmit={sendForm}>
-            <div>
-              <label
-                htmlFor="marketplace"
-                className="block text-sm font-medium leading-6 text-gray-900 mx-auto sm:max-w-sm">
-                Площадка
-              </label>
-              <div className="mt-2 ">
-                <select
-                  name="marketplace"
-                  id="marketplace"
-                  required
-                  className="bg-gray-50 mx-auto sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={formData.marketplace}
-                  onChange={marketPlaceChangeHandle}>
-                  <option value="">-- Выберите площадку --</option>
-                  <option value="OZON">OZON</option>
-                  <option value="WB">Wildberries</option>
-                </select>
+        <div className="mt-4 sm:mx-auto sm:w-full ">
+          <form
+            name="markets-load-form"
+            className=""
+            onSubmit={sendMarketsFile}>
+            <div className="mb-4 text-center">
+              <div className="flex mx-4 justify-center items-center">
+                <input
+                  type="file"
+                  id="file-input"
+                  text="Загрузка файла..."
+                  onChange={(e) => setMarketsFile(e.target.files[0])}
+                  filename={marketsFile}
+                  size={20}
+                  className="bg-gray-50 sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                />
+                <button
+                  disabled={!marketsFile}
+                  type="submit"
+                  className="justify-center ms-2 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:max-w-sm">
+                  Загрузить
+                </button>
               </div>
             </div>
-            
-            <div className=''>
+          </form>
+
+          <form name="send-form" className="mt-10" onSubmit={sendForm}>
+            <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+              <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+                Запрос на заполнение данных в google-таблицах
+              </h2>
+            </div>
+            <div className="mt-4">
               <label
-                htmlFor="marketplace"
-                className="block text-sm font-medium leading-6 text-gray-900 mx-auto sm:max-w-sm">
-                Магазин
+                htmlFor="market"
+                className="block text-sm font-medium text-gray-900 mx-auto sm:max-w-sm">
+                Выберите магазин
               </label>
               <div className="mt-2">
                 <select
@@ -141,115 +138,23 @@ function App() {
                   id="market"
                   required
                   className="bg-gray-50 mx-auto sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={formData.market}
-                  onChange={e => setFormData({...formData, market: e.target.value})}>
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }>
                   <option value="">-- Выберите магазин --</option>
-                  <option value="market1">market1</option>
-                  <option value="market2">market2</option>
-                  <option value="market3">market3</option>
-                  <option value="market4">market4</option>
+                  {markArr.map((el, ind) => (
+                    <option value={el} key={ind}>
+                      {el}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            <div className={`${showPerformance} mx-auto sm:max-w-sm`}>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="client-id"
-                  className="block text-sm font-medium leading-6 text-gray-900 ">
-                  Performance Key
-                </label>
-              </div>
-              <div className="mt-2">
-                <input
-                  id="performance-key"
-                  name="performance-key"
-                  type="text"
-                  placeholder="Performance Key"
-                  required={formData.marketplace === 'ozon'? true : false}
-                  className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  onChange={(e) => {
-                    setFormData({ ...formData, performance_key: e.target.value });
-                  }}
-                  value={formData.performance_key}
-                />
-              </div>
-            </div>
-
-            <div className={`${showPerformance} mx-auto sm:max-w-sm`}>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="client-id"
-                  className="block text-sm font-medium leading-6 text-gray-900 ">
-                  Performance Secret
-                </label>
-              </div>
-              <div className="mt-2">
-                <input
-                  id="performance-secret"
-                  name="performance-secret"
-                  type="text"
-                  placeholder="Performance Secret"
-                  required={formData.marketplace === 'ozon'? true :false}
-                  className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  onChange={(e) => {
-                    setFormData({ ...formData, performance_secret: e.target.value });
-                  }}
-                  value={formData.performance_secret}
-                />
-              </div>
-            </div>
-
-            <div className="mx-auto sm:max-w-sm">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="client-id"
-                  className="block text-sm font-medium leading-6 text-gray-900 ">
-                  CLIENT_ID
-                </label>
-              </div>
-              <div className="mt-2">
-                <input
-                  id="client-id"
-                  name="client-id"
-                  type="text"
-                  placeholder="client-id"
-                  required
-                  className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  onChange={(e) => {
-                    setFormData({ ...formData, client_id: e.target.value });
-                  }}
-                  value={formData.client_id}
-                />
-              </div>
-            </div>
-
-            <div className="mx-auto sm:max-w-sm">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="client-key"
-                  className="block text-sm font-medium leading-6 text-gray-900 ">
-                  CLIENT_KEY
-                </label>
-              </div>
-              <div className="mt-2">
-                <input
-                  id="client-key"
-                  name="client-key"
-                  type="text"
-                  placeholder="client-key"
-                  required
-                  className="block w-full rounded-md border-0 p-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  onChange={(e) => {
-                    setFormData({ ...formData, client_key: e.target.value });
-                  }}
-                  value={formData.client_key}
-                />
-              </div>
-            </div>
             <div className="flex justify-center">
               <div className="flex justify-center flex-col">
-                <div className="text-center">Временной диапазон</div>
+                <div className="text-center mt-4">Временной диапазон</div>
                 <DatePicker
                   id="dates"
                   name="dates"
@@ -273,7 +178,7 @@ function App() {
             <div className="flex justify-center">
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:max-w-sm">
+                className="flex mt-4 w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:max-w-sm">
                 Отправить запрос
               </button>
             </div>

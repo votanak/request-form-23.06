@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "date-fns": "^3.6.0",
+    "query-string": "^9.0.0",
     "react": "^18.2.0",
     "react-datepicker": "^7.1.0",
     "react-dom": "^18.2.0",
-    "styled-components": "^6.1.11"
+    "styled-components": "^6.1.11",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
