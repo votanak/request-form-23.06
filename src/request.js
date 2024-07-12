@@ -1,7 +1,6 @@
 import queryString from 'query-string';
 
 export const request = async (url, method, params) => {
-  console.log(params);
   try {
     const response = await fetch(
       `${import.meta.env.VITE_REACT_APP_SERVER_URL}${url}`,
@@ -13,7 +12,7 @@ export const request = async (url, method, params) => {
         ...(method === 'POST' ? params : {}),
       },
     );
-    response.json();
+    return response.json();
   } catch (e) {
     console.log(e);
     return e;

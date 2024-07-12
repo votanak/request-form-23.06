@@ -39,7 +39,9 @@ function App() {
   const [marketsFile, setMarketsFile] = useState('');
 
   useEffect(() => {
-    getRequest('/markets', '').then((marketsData) => setMarkets(marketsData));
+    getRequest('/markets', '').then((data) => {
+      setMarkets(data.market_names);
+    });
   }, []);
 
   const sendMarketsFile = (e) => {
@@ -49,34 +51,40 @@ function App() {
     fileReader.onload = (e) => {
       let workbook = XLSX.read(e.target.result, { type: 'binary' });
       let mArr = XLSX.utils.sheet_to_json(workbook.Sheets['Магазины']);
-      console.log(mArr);
       let marketsArray = [];
       mArr.forEach((el) => {
         marketsArray.push({
-          name: el['Название магазина'] || '',
-          marketplace: el['Площадка'] || '',
-          performance_key: el['performance key'] || '',
-          performance_secret: el['performance secret'] || '',
-          client_id: el['client id'],
-          client_key: el['client key'],
-          spreadsheet_url: el['Ссылка на Google-таблицу'] || '',
+          name: el['Название магазина'].toString() || '',
+          marketplace: el['Площадка'].toString() || '',
+          performance_key:
+            el['performance key'] != null
+              ? el['performance key'].toString()
+              : '',
+          performance_secret: el['performance secret']
+            ? el['performance secret'].toString()
+            : '',
+          client_id: el['client id'].toString(),
+          client_key: el['client key'].toString(),
+          spreadsheet_url: el['Ссылка на Google-таблицу'].toString() || '',
         });
       });
-      postRequest('/markets', { markets: marketsArray }).then((data) => {
-        console.log(data);
+      postRequest('/markets', { markets: marketsArray }).then(() => {
         document.querySelector('#file-input').value = '';
+        alert('Данные успешно загружены');
+        getRequest('/markets', '').then((data) => {
+          setMarkets(data.market_names);
+        });
+        setMarketsFile('');
       });
     };
   };
 
   const sendForm = (e) => {
     e.preventDefault();
-    postRequest('/markets', {
-      body: JSON.stringify({
-        name: formData.name,
-        startDate: formData.startDate,
-        endDate: formData.startDate,
-      }),
+    postRequest('/req', {
+      shopName: formData.name,
+      startDate: formData.startDate,
+      endDate: formData.startDate,
     }).then((data) => alert(data));
     setFormData({
       name: '',
@@ -84,6 +92,8 @@ function App() {
       endDate: new Date(),
     });
   };
+
+  console.log('mf', !marketsFile.name);
 
   return (
     <AppStyle>
@@ -111,7 +121,7 @@ function App() {
                   className="bg-gray-50 sm:max-w-sm border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
                 <button
-                  disabled={!marketsFile}
+                  disabled={!marketsFile.name}
                   type="submit"
                   className="justify-center ms-2 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:max-w-sm">
                   Загрузить
@@ -143,7 +153,7 @@ function App() {
                     setFormData({ ...formData, name: e.target.value })
                   }>
                   <option value="">-- Выберите магазин --</option>
-                  {markArr.map((el, ind) => (
+                  {markets.map((el, ind) => (
                     <option value={el} key={ind}>
                       {el}
                     </option>
@@ -178,6 +188,7 @@ function App() {
             <div className="flex justify-center">
               <button
                 type="submit"
+                disabled={!formData.name}
                 className="flex mt-4 w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:max-w-sm">
                 Отправить запрос
               </button>
