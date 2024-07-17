@@ -85,15 +85,15 @@ function App() {
       shopName: formData.name,
       startDate: formData.startDate,
       endDate: formData.startDate,
-    }).then((data) => alert(data));
+    })
+      .then(() => alert(`Запрос по магазину ${formData.name} выполнен успешно`))
+      .catch((err) => alert('Ошибка запроса: ', err));
     setFormData({
       name: '',
       startDate: new Date(),
       endDate: new Date(),
     });
   };
-
-  console.log('mf', !marketsFile.name);
 
   return (
     <AppStyle>
@@ -153,7 +153,7 @@ function App() {
                     setFormData({ ...formData, name: e.target.value })
                   }>
                   <option value="">-- Выберите магазин --</option>
-                  {markets.map((el, ind) => (
+                  {markets?.map((el, ind) => (
                     <option value={el} key={ind}>
                       {el}
                     </option>
